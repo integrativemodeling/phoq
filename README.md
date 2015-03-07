@@ -11,3 +11,14 @@ two states.
 
 _ucsf_chimera_files:_
 files used to generate the figures in the paper.
+
+_modeling:_ scripts for modeling the system:
+
+ - 2Y20_MC_1_FULL 1-state modelling
+ - 2Y20_MC_2_FULL_90_PERCENT_DATA_1 2-state modeling with 90% data lackknifing
+ - 2Y20_MC_2_FULL_95_PERCENT_DATA_1 2-state modeling with 95% data lackknifing
+ - 2Y20_MC_2_FULL_template directory with all needed running scripts
+ - 2Y20_MC_3_FULL 3-state modeling
+ - 2Y20_MC_2_FULL 2-state modeling
+ - 2Y20_MC_2_FULL_90_PERCENT_DATA_2 2-state modeling with 90% data lackknifing
+ - 2Y20_MC_2_FULL_95_PERCENT_DATA_2 2-state modeling with 95% data lackknifing
