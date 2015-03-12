@@ -336,10 +336,10 @@ def get_homology_restraint(model, maps, sigmaG, cutoff):
               r0=IMP.atom.Residue(IMP.atom.Atom(p0).get_parent()).get_index()
               r1=IMP.atom.Residue(IMP.atom.Atom(p1).get_parent()).get_index() 
               kappas[str(r0)+"-"+str(r1)]=kappa
-#             lnar=IMP.isd2.LogNormalAmbiguousRestraint(p0,p1,kappa,sigmaG)
-#             for key in maps:
-#                  lnar.add_contribution(dist_dict[(key,p0,p1)],omegas[key])
-#             rset.add_restraint(lnar)
+              lnar=IMP.isd.LognormalAmbiguousRestraint(p0,p1,kappa,sigmaG)
+              for key in maps:
+                   lnar.add_contribution(dist_dict[(key,p0,p1)],omegas[key])
+              rset.add_restraint(lnar)
 
     return kappas,omegas,rset,dist_dict
 
@@ -375,9 +375,9 @@ def get_elastic_restraint(model, residlist, sigmaG, cutoff):
               kappa.set_lower(0.0)
               kappa.set_upper(0.0)
               kappa.set_is_optimized(kappa.get_nuisance_key(),False)
-#             lnar=IMP.isd2.LogNormalAmbiguousRestraint(p0,p1,kappa,sigmaG)
-#             lnar.add_contribution(dist0,omega)
-#             rslist.append(lnar)
+              lnar=IMP.isd.LognormalAmbiguousRestraint(p0,p1,kappa,sigmaG)
+              lnar.add_contribution(dist0,omega)
+              rslist.append(lnar)
 
     return omega,rslist
 
