@@ -250,7 +250,7 @@ def get_CA_force_field(chain, resrange, dihe_dict, ang_dict, do_mix):
     for res in range(resrange[0],resrange[1]+1):
         if res not in dihe_dict: continue
         # get the appropriate parameters
-        [phi0,phi1,score_dih]=read_potential_dihedral(IMP.isd2.get_data_path("CADihedralRestraint.dat"),dihe_dict[res],do_mix[res])
+        [phi0,phi1,score_dih]=read_potential_dihedral("../data/CADihedralRestraint.dat",dihe_dict[res],do_mix[res])
         # get the particles
         ps=[]
         for delta in range(-2,+3):
@@ -267,7 +267,7 @@ def get_CA_force_field(chain, resrange, dihe_dict, ang_dict, do_mix):
     for res in range(resrange[0],resrange[1]+1):
         if res not in ang_dict: continue
         # get the appropriate parameters
-        [psi,score_ang]=read_potential_angle(IMP.isd2.get_data_path("CAAngleRestraint.dat"),ang_dict[res],do_mix[res])
+        [psi,score_ang]=read_potential_angle("../data/CAAngleRestraint.dat",ang_dict[res],do_mix[res])
         # get the particles
         ps=[]
         for delta in range(-1,+2):
