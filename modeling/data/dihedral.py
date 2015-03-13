@@ -299,7 +299,4 @@ for a in open("file.list"):
              dihe_histo[td]=dihe_histo[td]+1             
           else:
              dihe_histo[td]=1
-             
-
-
-
+print_output(dihe_histo)

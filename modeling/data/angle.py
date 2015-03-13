@@ -310,6 +310,4 @@ for a in open("file.list"):
           else:
              dihe_histo[td]=1
   
-
-
-
+print_output(dihe_histo)
