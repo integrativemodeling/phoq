@@ -11,7 +11,6 @@ import IMP.core
 import IMP.rmf
 import RMF
 import math
-import IMP.isd2
 try:
     from IMP.mpi import ReplicaExchange
 except ImportError:
@@ -899,9 +898,9 @@ for istep in range(0,NITER_):
         s2=' '.join(["%5s %12.6f " % (kkey,global_rset[kkey].evaluate(False)) for kkey in global_rset])
         #s6=' '.join(["%5s %12.6f " % (kkey,sigmas[kkey].get_scale()) for kkey in sigmas])
         #s7=' '.join(["%5s %12.6f " % (kkey,betas[kkey].get_scale()) for kkey in betas])
-        s9=' '.join(["%5s %12.6f " % (IMP.isd2.CysteineCrossLinkRestraint.get_from(rst).get_name(),IMP.isd2.CysteineCrossLinkRestraint.get_from(rst).get_model_frequency()) for rst in global_rset['Cross-link'].get_restraints()])
+        s9=' '.join(["%5s %12.6f " % (IMP.isd.CysteineCrossLinkRestraint.get_from(rst).get_name(),IMP.isd.CysteineCrossLinkRestraint.get_from(rst).get_model_frequency()) for rst in global_rset['Cross-link'].get_restraints()])
         s10=' '.join(["%5s %12.6f " % (kkey,crosslink_expdict[kkey]) for kkey in crosslink_expdict])
-        s11=' '.join(["%5s %12.6f " % (IMP.isd2.CysteineCrossLinkRestraint.get_from(rst).get_name(),IMP.isd2.CysteineCrossLinkRestraint.get_from(rst).get_standard_error()) for rst in global_rset['Cross-link'].get_restraints()]) 
+        s11=' '.join(["%5s %12.6f " % (IMP.isd.CysteineCrossLinkRestraint.get_from(rst).get_name(),IMP.isd.CysteineCrossLinkRestraint.get_from(rst).get_standard_error()) for rst in global_rset['Cross-link'].get_restraints()]) 
         s14="Total_energy %lf" % (myscore)
         s20=' '.join(["%5s %12.6f " % (kkey,crosslink_epsilons[kkey].get_scale()) for kkey in crosslink_epsilons])
         s30=' '.join(["%5d %12.6f " % (i,ww[i]) for i in range(0,ww.get_dimension())]) 
