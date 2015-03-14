@@ -578,7 +578,7 @@ def initialize_coordinates(protein):
     trans=tmptrans.get_inverse()
     IMP.core.transform(rb,trans)
     rb.set_reference_frame(IMP.algebra.ReferenceFrame3D(IMP.algebra.Transformation3D
-       (IMP.algebra.get_rotation_about_axis(IMP.algebra.Vector3D(0,1,0),-math.pi/2.0),
+       (IMP.algebra.get_rotation_about_axis(IMP.algebra.Vector3D(1,0,0),math.pi/2.0) * IMP.algebra.get_rotation_about_axis(IMP.algebra.Vector3D(0,1,0),-math.pi/2.0),
         IMP.algebra.Vector3D(0,0,+14.0))))
     IMP.core.RigidBody.teardown_particle(rb)
     m.remove_particle(rb)
