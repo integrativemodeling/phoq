@@ -853,11 +853,11 @@ for i in range(0,NCOPIES_): IMP.rmf.add_hierarchy(rh, PHOQ[i])
 # add ISD particles
 IMP.rmf.add_particles(rh, ISD_particles)
 # add other information
-my_kc=rh.add_category("my data")
-score_key=rh.add_float_key(my_kc,"my score",True)
-cross_key=rh.add_float_key(my_kc,"my cross-link score",True)
+my_kc=rh.get_category("my data")
+score_key=rh.get_key(my_kc, "my score", RMF.float_tag)
+cross_key=rh.get_key(my_kc, "my cross-link score", RMF.float_tag)
 #bias_key=rh.add_float_key(my_kc,"my bias",True)
-index_key=rh.add_int_key(my_kc,"my index",True)
+index_key=rh.get_key(my_kc, "my index", RMF.int_tag)
 
 # open log file
 log=open('log'+str(myindex),'w')
@@ -951,13 +951,14 @@ for istep in range(0,NITER_):
             log.write("Drms                      %s" % s0+" copyID_"+str(i)+" "+s12[i]) #+" "+s13[i] )
             log.write("\n")
  
+        # other useful data
+        rh.get_root_node().set_value(score_key,myscore)
+        rh.get_root_node().set_value(cross_key,mycross)
+        #rh.get_root_node().set_value(bias_key,mybias)
+        rh.get_root_node().set_value(index_key,myindex)
+
         # print all information of the current frame to rmf
         IMP.rmf.save_frame(rh,istep/W_STRIDE)
-        # and other useful data
-        (rh.get_root_node()).set_value(score_key,myscore,istep/W_STRIDE)
-        (rh.get_root_node()).set_value(cross_key,mycross,istep/W_STRIDE)
-        #(rh.get_root_node()).set_value(bias_key,mybias,istep/W_STRIDE)
-        (rh.get_root_node()).set_value(index_key,myindex,istep/W_STRIDE)
 
 
     # time for an exchange
