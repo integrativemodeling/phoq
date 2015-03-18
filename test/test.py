@@ -38,5 +38,40 @@ class Tests(unittest.TestCase):
         os.unlink('output.dat')
         os.unlink('file.list')
 
+    def run_modeling(self, dirname):
+        os.chdir(os.path.join(TOPDIR, 'modeling', dirname))
+        p = subprocess.check_call(['./HK_model_ENSEMBLE_REM.py', '--test'])
+        # todo: make sure the outputs are actually reasonable
+        os.unlink('log0')
+        os.unlink('traj0.rmf')
+
+    def test_1_state(self):
+        """Test 1-state modeling"""
+        self.run_modeling('2Y20_MC_1_FULL')
+
+    def test_2_state(self):
+        """Test 2-state modeling"""
+        self.run_modeling('2Y20_MC_2_FULL')
+
+    def test_2_state_90_1(self):
+        """Test 2-state modeling with 90% data (first set)"""
+        self.run_modeling('2Y20_MC_2_FULL_90_PERCENT_DATA_1')
+
+    def test_2_state_90_2(self):
+        """Test 2-state modeling with 90% data (second set)"""
+        self.run_modeling('2Y20_MC_2_FULL_90_PERCENT_DATA_2')
+
+    def test_2_state_95_1(self):
+        """Test 2-state modeling with 95% data (first set)"""
+        self.run_modeling('2Y20_MC_2_FULL_95_PERCENT_DATA_1')
+
+    def test_2_state_95_2(self):
+        """Test 2-state modeling with 95% data (second set)"""
+        self.run_modeling('2Y20_MC_2_FULL_95_PERCENT_DATA_2')
+
+    def test_3_state(self):
+        """Test 3-state modeling"""
+        self.run_modeling('2Y20_MC_3_FULL')
+
 if __name__ == '__main__':
     unittest.main()
