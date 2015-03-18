@@ -21,9 +21,10 @@ MAXROT_=0.03
 MAXEPSILON_=0.01
 MAXWEIGHT_=0.1
 
-# Run fewer iterations for testing
-#NITER_=700000
-NITER_=100
+NITER_=700000
+# Run fewer iterations when testing
+if '--test' in sys.argv:
+    NITER_=5000
 NOPT_=500
 HOMOLOGY_CUTOFF_=8.0
 ELASTIC_CUTOFF_=6.0
