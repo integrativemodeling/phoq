@@ -859,10 +859,6 @@ index_key=rh.get_key(my_kc, "my index", RMF.int_tag)
 # open log file
 log=open('log'+str(myindex),'w')
 
-for r in m.get_restraints():
-    print r, r.evaluate(False)
-STOP
-
 # Sampling (or reloading)
 for istep in range(0,NITER_):
 
