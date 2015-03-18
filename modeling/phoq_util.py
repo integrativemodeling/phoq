@@ -1,3 +1,4 @@
+from __future__ import print_function
 import IMP.atom
 import math
 
@@ -28,13 +29,13 @@ def read_alignments(filename,model,temp):
             s1=IMP.atom.Selection(model, chains=riga[1], residue_index=int(riga[2]), residue_type=IMP.atom.get_residue_type(riga[0]), atom_type=IMP.atom.AT_CA)
             p1=s1.get_selected_particles()[0]
         except:
-            print "residue %d of chain %s not found in model" % (int(riga[2]),riga[1])
+            print("residue %d of chain %s not found in model" % (int(riga[2]),riga[1]))
             continue
         try:
             s2=IMP.atom.Selection(temp, chains=riga[4], residue_index=int(riga[5]), residue_type=IMP.atom.get_residue_type(riga[3]), atom_type=IMP.atom.AT_CA)
             p2=s2.get_selected_particles()[0]
         except:
-            print "residue %d of chain %s not found in template" % (int(riga[5]), riga[4])
+            print("residue %d of chain %s not found in template" % (int(riga[5]), riga[4]))
             continue
 
         align[p1]=p2
