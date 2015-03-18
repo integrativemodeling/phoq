@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 import IMP
 import IMP.algebra
