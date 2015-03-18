@@ -1,18 +1,16 @@
-import dl
 import sys
-flags = sys.getdlopenflags()
-sys.setdlopenflags(flags | dl.RTLD_GLOBAL)
-
 import IMP
 import IMP.algebra
 import IMP.atom
-import IMP.membrane
 import IMP.container
 import IMP.core
 import IMP.rmf
 import RMF
 import math
-import IMP.isd2
+try:
+    from IMP.mpi import ReplicaExchange
+except ImportError:
+    from IMP.pmi.samplers import _SerialReplicaExchange as ReplicaExchange
 
 # PARAMETERS
 W_BIAS_STRIDE=10000
@@ -24,6 +22,9 @@ MAXEPSILON_=0.01
 MAXWEIGHT_=0.1
 
 NITER_=700000
+# Run fewer iterations when testing
+if '--test' in sys.argv:
+    NITER_=5000
 NOPT_=500
 HOMOLOGY_CUTOFF_=8.0
 ELASTIC_CUTOFF_=6.0
@@ -54,7 +55,7 @@ KT_CAFF_=1.0
 m = IMP.Model()
 
 # set up replica exchange
-rem=IMP.membrane.ReplicaExchange()
+rem=ReplicaExchange()
 # get number of replicas
 nproc=rem.get_number_of_replicas()
 # create array of temperature
@@ -98,7 +99,7 @@ def load_pdb(name,filename):
     return prot
 
 def create_rigid_body(chain,res0,res1):
-    s=IMP.atom.Selection(chain, residue_indexes=[(res0,res1+1)])
+    s=IMP.atom.Selection(chain, residue_indexes=range(res0,res1+1))
     atoms=[]
     for p in s.get_selected_particles():
         atoms.append(IMP.core.XYZR(p))
@@ -107,7 +108,7 @@ def create_rigid_body(chain,res0,res1):
     return rb
 
 def get_excluded_volume(prot,kappa,excluded_residues=[]):
-    rset=IMP.RestraintSet('Excluded_Volume')
+    rset=IMP.RestraintSet(m, 'Excluded_Volume')
     atoms_to_use=[]
     for atom in IMP.atom.get_by_type(prot, IMP.atom.ATOM_TYPE):
         residue=IMP.atom.Residue(IMP.atom.Atom(atom).get_parent())
@@ -245,7 +246,7 @@ def get_CA_force_field(chain, resrange, dihe_dict, ang_dict, do_mix):
     for res in range(resrange[0],resrange[1]+1):
         if res not in dihe_dict: continue
         # get the appropriate parameters
-        [phi0,phi1,score_dih]=read_potential_dihedral(IMP.isd2.get_data_path("CADihedralRestraint.dat"),dihe_dict[res],do_mix[res])
+        [phi0,phi1,score_dih]=read_potential_dihedral("../data/CADihedralRestraint.dat",dihe_dict[res],do_mix[res])
         # get the particles
         ps=[]
         for delta in range(-2,+3):
@@ -255,14 +256,14 @@ def get_CA_force_field(chain, resrange, dihe_dict, ang_dict, do_mix):
         pairslist.append(IMP.ParticlePair(ps[3],ps[0]))
         pairslist.append(IMP.ParticlePair(ps[1],ps[4]))
         pairslist.append(IMP.ParticlePair(ps[4],ps[1]))
-        dr=IMP.isd2.CADihedralRestraint(ps[0],ps[1],ps[2],ps[3],ps[4],phi0,phi1,score_dih)
+        dr=IMP.atom.CADihedralRestraint(ps[0],ps[1],ps[2],ps[3],ps[4],phi0,phi1,score_dih)
         dr.set_name('Dihedral restraint')
         rslist.append(dr) 
     # add angles 
     for res in range(resrange[0],resrange[1]+1):
         if res not in ang_dict: continue
         # get the appropriate parameters
-        [psi,score_ang]=read_potential_angle(IMP.isd2.get_data_path("CAAngleRestraint.dat"),ang_dict[res],do_mix[res])
+        [psi,score_ang]=read_potential_angle("../data/CAAngleRestraint.dat",ang_dict[res],do_mix[res])
         # get the particles
         ps=[]
         for delta in range(-1,+2):
@@ -270,13 +271,13 @@ def get_CA_force_field(chain, resrange, dihe_dict, ang_dict, do_mix):
             ps.append(s.get_selected_particles()[0])
         pairslist.append(IMP.ParticlePair(ps[0],ps[2]))
         pairslist.append(IMP.ParticlePair(ps[2],ps[0]))
-        dr=IMP.isd2.CAAngleRestraint(ps[0],ps[1],ps[2],psi,score_ang)
+        dr=IMP.atom.CAAngleRestraint(ps[0],ps[1],ps[2],psi,score_ang)
         dr.set_name('Angle restraint')
         rslist.append(dr) 
     return (rslist,pairslist)
 
 def get_homology_restraint(model, maps, sigmaG, cutoff):
-    rset=IMP.RestraintSet('Homology_Restraint')
+    rset=IMP.RestraintSet(m, 'Homology_Restraint')
     #dictionaries
     kappas={}
     omegas={}
@@ -284,10 +285,9 @@ def get_homology_restraint(model, maps, sigmaG, cutoff):
 
     for key in maps:
     # define omega and lower and upper bounds
-        omega=IMP.isd2.Scale.setup_particle(IMP.Particle(m),1.0)
+        omega=IMP.isd.Scale.setup_particle(IMP.Particle(m),1.0)
         omega.set_lower(1.0)
         omega.set_upper(10000.0)
-        m.add_score_state(IMP.core.SingletonConstraint(IMP.isd2.NuisanceRangeModifier(),None,omega))
         omega.set_is_optimized(omega.get_nuisance_key(),True)
         omegas[key]=omega
 
@@ -301,8 +301,8 @@ def get_homology_restraint(model, maps, sigmaG, cutoff):
             p1=ps_model[j]
             
             # particles belonging to the same rigid body should not be restrained
-            if(IMP.core.RigidMember.particle_is_instance(p0) and 
-               IMP.core.RigidMember.particle_is_instance(p1) and
+            if(IMP.core.RigidMember.get_is_setup(p0) and
+               IMP.core.RigidMember.get_is_setup(p1) and
                IMP.core.RigidMember(p0).get_rigid_body() == IMP.core.RigidMember(p1).get_rigid_body()): continue
 
             # cycle over all the dictionaries
@@ -324,16 +324,15 @@ def get_homology_restraint(model, maps, sigmaG, cutoff):
                 dist_dict[(key,p0,p1)]=IMP.core.get_distance(IMP.core.XYZ(mk[p0]),IMP.core.XYZ(mk[p1]))
                 
               # define kappa and lower and upper bounds
-              kappa=IMP.isd2.Scale.setup_particle(IMP.Particle(m),1.0)
+              kappa=IMP.isd.Scale.setup_particle(IMP.Particle(m),1.0)
               kappa.set_lower(0.0)
               kappa.set_upper(float(npair-1))
-              m.add_score_state(IMP.core.SingletonConstraint(IMP.isd2.NuisanceRangeModifier(),None,kappa))
               if(npair>1): kappa.set_is_optimized(kappa.get_nuisance_key(),True)
               else: kappa.set_is_optimized(kappa.get_nuisance_key(),False)
               r0=IMP.atom.Residue(IMP.atom.Atom(p0).get_parent()).get_index()
               r1=IMP.atom.Residue(IMP.atom.Atom(p1).get_parent()).get_index() 
               kappas[str(r0)+"-"+str(r1)]=kappa
-              lnar=IMP.isd2.LogNormalAmbiguousRestraint(p0,p1,kappa,sigmaG)
+              lnar=IMP.isd.LognormalAmbiguousRestraint(p0,p1,kappa,sigmaG)
               for key in maps:
                    lnar.add_contribution(dist_dict[(key,p0,p1)],omegas[key])
               rset.add_restraint(lnar)
@@ -344,14 +343,13 @@ def get_elastic_restraint(model, residlist, sigmaG, cutoff):
     rslist=[]
 
     # define omega and lower and upper bounds
-    omega=IMP.isd2.Scale.setup_particle(IMP.Particle(m),1.0)
+    omega=IMP.isd.Scale.setup_particle(IMP.Particle(m),1.0)
     omega.set_lower(1.0)
     omega.set_upper(10000.0)
-    m.add_score_state(IMP.core.SingletonConstraint(IMP.isd2.NuisanceRangeModifier(),None,omega))
     omega.set_is_optimized(omega.get_nuisance_key(),True)
 
     # get all the particles in the model
-    s=IMP.atom.Selection(model, residue_indexes=residlist)
+    s=IMP.atom.Selection(model, residue_indexes=range(residlist))
     ps_model=s.get_selected_particles()
 
     # cycle on all pairs
@@ -361,30 +359,29 @@ def get_elastic_restraint(model, residlist, sigmaG, cutoff):
             p1=ps_model[j]
             
             # particles belonging to the same rigid body should not be restrained
-            if(IMP.core.RigidMember.particle_is_instance(p0) and 
-               IMP.core.RigidMember.particle_is_instance(p1) and
+            if(IMP.core.RigidMember.get_is_setup(p0) and 
+               IMP.core.RigidMember.get_is_setup(p1) and
                IMP.core.RigidMember(p0).get_rigid_body() == IMP.core.RigidMember(p1).get_rigid_body()): continue
 
             # get distance in the template 
             dist0=IMP.core.get_distance(IMP.core.XYZ(p0),IMP.core.XYZ(p1))
             if(dist0<cutoff):
               # define kappa and lower and upper bounds
-              kappa=IMP.isd2.Scale.setup_particle(IMP.Particle(m),0.0)
+              kappa=IMP.isd.Scale.setup_particle(IMP.Particle(m),0.0)
               kappa.set_lower(0.0)
               kappa.set_upper(0.0)
-              m.add_score_state(IMP.core.SingletonConstraint(IMP.isd2.NuisanceRangeModifier(),None,kappa))
               kappa.set_is_optimized(kappa.get_nuisance_key(),False)
-              lnar=IMP.isd2.LogNormalAmbiguousRestraint(p0,p1,kappa,sigmaG)
+              lnar=IMP.isd.LognormalAmbiguousRestraint(p0,p1,kappa,sigmaG)
               lnar.add_contribution(dist0,omega)
               rslist.append(lnar)
 
     return omega,rslist
 
 def get_kink_restraint(rbpairs, kappa):
-    rset=IMP.RestraintSet('Kink_Restraint')
+    rset=IMP.RestraintSet(m, 'Kink_Restraint')
     for rbs in rbpairs:
         h=IMP.core.HarmonicWell([10.0/180.0*math.pi,40.0/180.0*math.pi],kappa)
-        kps=IMP.membrane.KinkPairScore(h)
+        kps=IMP.core.RigidBodyAnglePairScore(h)
         pr=IMP.core.PairRestraint(kps,IMP.ParticlePair(rbs[0],rbs[1]))
         rset.add_restraint(pr)
     return rset
@@ -392,12 +389,13 @@ def get_kink_restraint(rbpairs, kappa):
 def get_prior(sigmas):
     rslist=[]
     for sigma in sigmas:
-        rslist.append(IMP.isd2.JeffreysRestraint(sigmas[sigma]))
+        rslist.append(IMP.isd.JeffreysRestraint(m, sigmas[sigma]))
     return rslist
 
 def get_rb_movers(rblist,rmax,tmax):
     mvs=[]
     for rb in rblist:
+        rblist[rb].set_coordinates_are_optimized(True)
         mv= IMP.core.RigidBodyMover(rblist[rb], rmax, tmax)
         mvs.append(mv)
     return mvs
@@ -463,23 +461,21 @@ def get_log_grid(gmin,gmax,ngrid):
    return grid
 
 def get_crosslink_restraint(protein_copies, filename):
-    rset=IMP.RestraintSet('Cysteine_Crosslink')
+    rset=IMP.RestraintSet(m, 'Cysteine_Crosslink')
     # dictionaries
     expdict={}
     epsilons={}
 
     # beta
-    beta=IMP.isd2.Scale.setup_particle(IMP.Particle(m),BETA_)
+    beta=IMP.isd.Scale.setup_particle(IMP.Particle(m),BETA_)
     beta.set_lower(BETA_)
     beta.set_upper(BETA_)
-    m.add_score_state(IMP.core.SingletonConstraint(IMP.isd2.NuisanceRangeModifier(),None,beta))
     beta.set_is_optimized(beta.get_nuisance_key(),False)
 
     # sigma 
-    sigma=IMP.isd2.Scale.setup_particle(IMP.Particle(m),1.0)
+    sigma=IMP.isd.Scale.setup_particle(IMP.Particle(m),1.0)
     sigma.set_lower(0.0)
     sigma.set_upper(1.0)
-    m.add_score_state(IMP.core.SingletonConstraint(IMP.isd2.NuisanceRangeModifier(),None,sigma))
     sigma.set_is_optimized(sigma.get_nuisance_key(),False)
 
     # upper boundary dictionary
@@ -490,16 +486,15 @@ def get_crosslink_restraint(protein_copies, filename):
  
     # epsilon particles 
     for id in ["16-41","42-65","185-226"]:
-        epsilonscale=IMP.isd2.Scale.setup_particle(IMP.Particle(m),0.01)
+        epsilonscale=IMP.isd.Scale.setup_particle(IMP.Particle(m),0.01)
         epsilonscale.set_lower(0.01)
         epsilonscale.set_upper(upperb[id])
-        m.add_score_state(IMP.core.SingletonConstraint(IMP.isd2.NuisanceRangeModifier(),None,epsilonscale))
         epsilonscale.set_is_optimized(epsilonscale.get_nuisance_key(),True)
         epsilons[id]=epsilonscale
    
     # population particle 
     pw=IMP.Particle(m)                                                               
-    weight=IMP.isd2.Weight.setup_particle(pw)                                        
+    weight=IMP.isd.Weight.setup_particle(pw)                                        
     weight.set_weights_are_optimized(True)
 
     # create grids needed by CrossLinkData
@@ -507,7 +502,7 @@ def get_crosslink_restraint(protein_copies, filename):
     omega1_grid=get_log_grid(1.0, 1000.0, 50)
     sigma_grid=[1.0]
     # read PMF from file
-    xlpot=open("cysteine_FES.dat")                                                   
+    xlpot=open("../data/cysteine_FES.dat")
     pot_x_grid=[]                                                                      
     pot_value_grid=[]                                                                   
     for line in xlpot:                                                               
@@ -517,7 +512,7 @@ def get_crosslink_restraint(protein_copies, filename):
            pot_x_grid.append(x)
            pot_value_grid.append(float(t[1])/4.0/math.pi/x/x)
     # CrossLinkMSData 
-    crossdata=IMP.isd2.CrossLinkData(dist_grid,omega1_grid,sigma_grid,pot_x_grid,pot_value_grid,10.0,20.0)
+    crossdata=IMP.isd.CrossLinkData(dist_grid,omega1_grid,sigma_grid,pot_x_grid,pot_value_grid,10.0,20.0)
 
     # create grids needed by CysteineCrossLinkData
     fmod_grid=get_grid(0.0, 1.0, 300, True)
@@ -535,7 +530,7 @@ def get_crosslink_restraint(protein_copies, filename):
         fexp=float(riga[4])
 
         # CysteineCrossLinkData
-        ccldata=IMP.isd2.CysteineCrossLinkData(fexp,fmod_grid,omega2_grid,[BETA_])
+        ccldata=IMP.isd.CysteineCrossLinkData(fexp,fmod_grid,omega2_grid,[BETA_])
 
         # get upperb id
         id=""
@@ -543,7 +538,7 @@ def get_crosslink_restraint(protein_copies, filename):
         if( 42 <= resid1 <= 65):   id="42-65"
         if(185 <= resid1 <=226): id="185-226"
 
-        ccl=IMP.isd2.CysteineCrossLinkRestraint(beta,sigma,epsilons[id],pw,crossdata,ccldata)
+        ccl=IMP.isd.CysteineCrossLinkRestraint(beta,sigma,epsilons[id],pw,crossdata,ccldata)
 
         for i,prot in enumerate(protein_copies):
             s1=IMP.atom.Selection(prot, chains=chain1, residue_index=resid1, atom_type=IMP.atom.AT_CA)
@@ -563,12 +558,12 @@ def get_crosslink_restraint(protein_copies, filename):
     return rset,expdict,beta,epsilons,pw
 
 def get_Ez_potential(protein,boundaries): 
-    rset=IMP.RestraintSet('Ez_potential')
+    rset=IMP.RestraintSet(m, 'Ez_potential')
     ps=[]
     for boundary in boundaries: 
-        s=IMP.atom.Selection(protein, residue_indexes=boundary)
+        s=IMP.atom.Selection(protein, residue_indexes=range(*boundary))
         ps+=s.get_selected_particles()
-    ez=IMP.membrane.EzRestraint(ps)
+    ez=IMP.atom.EzRestraint(ps)
     rset.add_restraint(ez)
     return rset 
 
@@ -580,13 +575,13 @@ def initialize_coordinates(protein):
     trans=tmptrans.get_inverse()
     IMP.core.transform(rb,trans)
     rb.set_reference_frame(IMP.algebra.ReferenceFrame3D(IMP.algebra.Transformation3D
-       (IMP.algebra.get_rotation_about_axis(IMP.algebra.Vector3D(0,1,0),-math.pi/2.0),
+       (IMP.algebra.get_rotation_about_axis(IMP.algebra.Vector3D(1,0,0),math.pi/2.0) * IMP.algebra.get_rotation_about_axis(IMP.algebra.Vector3D(0,1,0),-math.pi/2.0),
         IMP.algebra.Vector3D(0,0,+14.0))))
     IMP.core.RigidBody.teardown_particle(rb)
     m.remove_particle(rb)
  
 def get_layer_restraint(protein,resid,zrange,kappa):
-    rset=IMP.RestraintSet('Layer_restraint')
+    rset=IMP.RestraintSet(m, 'Layer_restraint')
     lsc=IMP.container.ListSingletonContainer(m)
     s=IMP.atom.Selection(protein, residue_index=resid, atom_type=IMP.atom.AT_CA)
     lsc.add_particles(s.get_selected_particles())
@@ -599,7 +594,7 @@ def get_layer_restraint(protein,resid,zrange,kappa):
 # read initial model
 PHOQ=[]
 #filelist=["model_A.pdb","model_B.pdb"]
-filelist=["PHOQ_PERI_initial_model.pdb","PHOQ_PERI_initial_model.pdb","PHOQ_PERI_initial_model.pdb"]
+filelist=["../data/PHOQ_PERI_initial_model.pdb"] * 3
 for i in range(0,NCOPIES_):
     PHOQ.append(load_pdb("PHOQ copy "+str(i),filelist[i]))
 
@@ -663,7 +658,7 @@ for res in range(233,246):
 excvol_filter={}
 
 for i in range(0,NCOPIES_):
-    global_rset['CAForceField::'+str(i)]=IMP.RestraintSet()
+    global_rset['CAForceField::'+str(i)]=IMP.RestraintSet(m)
     excvol_filter['Excluded_Volume::'+str(i)]=IMP.container.ListPairContainer(m)
     for chain in IMP.atom.get_by_type(PHOQ[i], IMP.atom.CHAIN_TYPE):
         for res in floppyres:
@@ -686,10 +681,9 @@ for key in excvol_filter:
 ISD_particles=[]
 
 # sigmaG is the same for all homology and elastic restraints
-sigmaG=IMP.isd2.Scale.setup_particle(IMP.Particle(m),SIGMAG_)
+sigmaG=IMP.isd.Scale.setup_particle(IMP.Particle(m),SIGMAG_)
 sigmaG.set_lower(SIGMAG_)
 sigmaG.set_upper(SIGMAG_)
-m.add_score_state(IMP.core.SingletonConstraint(IMP.isd2.NuisanceRangeModifier(),None,sigmaG))
 sigmaG.set_is_optimized(sigmaG.get_nuisance_key(),False)
 ISD_particles.append(sigmaG) # add to list of ISD particles for rmf I/O
 
@@ -701,7 +695,7 @@ ISD_particles.append(sigmaG) # add to list of ISD particles for rmf I/O
 
 #for i in range(0,NCOPIES_):
 #    elastic_omegas={}
-#    global_rset['Elastic_Network::'+str(i)]=IMP.RestraintSet()
+#    global_rset['Elastic_Network::'+str(i)]=IMP.RestraintSet(m)
 #    for chain in IMP.atom.get_by_type(PHOQ[i], IMP.atom.CHAIN_TYPE):
 #        for res in elasticres:
 #            (omega,rs)=get_elastic_restraint(chain, [res], sigmaG, ELASTIC_CUTOFF_)
@@ -719,21 +713,21 @@ hamp_dist_dict_copies=[]
 
 # HAMP DOMAIN
 # 1) 3ZRX
-#template1=load_pdb("template1","3ZRX.pdb")
+#template1=load_pdb("template1","../data/3ZRX.pdb")
 # 2) 2Y20_A_B 
-template2=load_pdb("template2","2Y20_A_B.pdb")
+template2=load_pdb("template2","../data/2Y20_A_B.pdb")
 
 # PERIPLASMIC
 #peri_align_copies=[]
 #peri_kappas_copies=[]
 #peri_omegas_copies=[]
 #peri_dist_dict_copies=[]
-#template3=load_pdb("template3","3BQ8.pdb")
+#template3=load_pdb("template3","../data/3BQ8.pdb")
 
 for i in range(0,NCOPIES_):
     hamp_align={}
-    #hamp_align['3ZRX']=read_alignments("PHOQ-3ZRX.align",PHOQ[i],template1)
-    hamp_align['2Y20']=read_alignments("PHOQ-2Y20.align",PHOQ[i],template2)
+    #hamp_align['3ZRX']=read_alignments("../data/PHOQ-3ZRX.align",PHOQ[i],template1)
+    hamp_align['2Y20']=read_alignments("../data/PHOQ-2Y20.align",PHOQ[i],template2)
     hamp_align_copies.append(hamp_align)
 
     (hamp_kappas,hamp_omegas,rset,hamp_dist_dict)=get_homology_restraint(PHOQ[i],hamp_align,sigmaG,HOMOLOGY_CUTOFF_)
@@ -775,17 +769,17 @@ for key in crosslink_epsilons:
 
 # Jeffrey Prior for omegas
 for i in range(0,NCOPIES_):
-   global_rset['Prior::'+str(i)]=IMP.RestraintSet()
+   global_rset['Prior::'+str(i)]=IMP.RestraintSet(m)
    global_rset['Prior::'+str(i)].add_restraints(get_prior(hamp_omegas_copies[i]))
    #global_rset['Prior::'+str(i)].add_restraints(get_prior(peri_omegas_copies[i]))
    #global_rset['Prior::'+str(i)].add_restraints(get_prior(elastic_omegas_copies[i]))
 
 # Boundaries for Weight
-global_rset['Weight Boundaries']=IMP.isd2.WeightRestraint(crosslink_pw,0.2,0.8,100000.)
+global_rset['Weight Boundaries']=IMP.isd.WeightRestraint(crosslink_pw,0.2,0.8,100000.)
 
 # Ez potential
 #TM_regions=[[(13,45)],[(194,221)]]
-TM_regions=[[(17,37)],[(195,215)]]
+TM_regions=[(17,37),(195,215)]
 for i in range(0,NCOPIES_):
     global_rset['Ez_potential::'+str(i)]=get_Ez_potential(PHOQ[i],TM_regions)
 
@@ -819,7 +813,7 @@ mvs+=get_rb_movers(rblist,MAXTRANS_,MAXROT_)
 ps=[]
 for i in range(0,NCOPIES_):
     for p in IMP.atom.get_leaves(PHOQ[i]):
-        if(IMP.core.RigidMember.particle_is_instance(p)==False):
+        if(IMP.core.RigidMember.get_is_setup(p)==False):
           ps.append(p)
 mvs+=get_ball_movers(ps,MAXTRANS_)
 
@@ -833,7 +827,7 @@ for i in range(0,NCOPIES_):
 mvs+=get_nuisance_movers(crosslink_epsilons,MAXEPSILON_) 
 
 # Movers for weight
-mvs.append(IMP.isd2.WeightMover(crosslink_pw,MAXWEIGHT_))
+mvs.append(IMP.isd.WeightMover(crosslink_pw,MAXWEIGHT_))
 
 # SerialMover
 smv=IMP.core.SerialMover(mvs)
@@ -856,11 +850,11 @@ for i in range(0,NCOPIES_): IMP.rmf.add_hierarchy(rh, PHOQ[i])
 # add ISD particles
 IMP.rmf.add_particles(rh, ISD_particles)
 # add other information
-my_kc=rh.add_category("my data")
-score_key=rh.add_float_key(my_kc,"my score",True)
-cross_key=rh.add_float_key(my_kc,"my cross-link score",True)
+my_kc=rh.get_category("my data")
+score_key=rh.get_key(my_kc, "my score", RMF.float_tag)
+cross_key=rh.get_key(my_kc, "my cross-link score", RMF.float_tag)
 #bias_key=rh.add_float_key(my_kc,"my bias",True)
-index_key=rh.add_int_key(my_kc,"my index",True)
+index_key=rh.get_key(my_kc, "my index", RMF.int_tag)
 
 # open log file
 log=open('log'+str(myindex),'w')
@@ -890,7 +884,7 @@ for istep in range(0,NITER_):
         mycross=global_rset['Cross-link'].evaluate(False)
 
         # get weights                                                            
-        ww=IMP.isd2.Weight(crosslink_pw).get_weights()
+        ww=IMP.isd.Weight(crosslink_pw).get_weights()
  
         # prepare printout
         s0="%12d " % (istep)
@@ -901,9 +895,9 @@ for istep in range(0,NITER_):
         s2=' '.join(["%5s %12.6f " % (kkey,global_rset[kkey].evaluate(False)) for kkey in global_rset])
         #s6=' '.join(["%5s %12.6f " % (kkey,sigmas[kkey].get_scale()) for kkey in sigmas])
         #s7=' '.join(["%5s %12.6f " % (kkey,betas[kkey].get_scale()) for kkey in betas])
-        s9=' '.join(["%5s %12.6f " % (IMP.isd2.CysteineCrossLinkRestraint.get_from(rst).get_name(),IMP.isd2.CysteineCrossLinkRestraint.get_from(rst).get_model_frequency()) for rst in global_rset['Cross-link'].get_restraints()])
+        s9=' '.join(["%5s %12.6f " % (IMP.isd.CysteineCrossLinkRestraint.get_from(rst).get_name(),IMP.isd.CysteineCrossLinkRestraint.get_from(rst).get_model_frequency()) for rst in global_rset['Cross-link'].get_restraints()])
         s10=' '.join(["%5s %12.6f " % (kkey,crosslink_expdict[kkey]) for kkey in crosslink_expdict])
-        s11=' '.join(["%5s %12.6f " % (IMP.isd2.CysteineCrossLinkRestraint.get_from(rst).get_name(),IMP.isd2.CysteineCrossLinkRestraint.get_from(rst).get_standard_error()) for rst in global_rset['Cross-link'].get_restraints()]) 
+        s11=' '.join(["%5s %12.6f " % (IMP.isd.CysteineCrossLinkRestraint.get_from(rst).get_name(),IMP.isd.CysteineCrossLinkRestraint.get_from(rst).get_standard_error()) for rst in global_rset['Cross-link'].get_restraints()]) 
         s14="Total_energy %lf" % (myscore)
         s20=' '.join(["%5s %12.6f " % (kkey,crosslink_epsilons[kkey].get_scale()) for kkey in crosslink_epsilons])
         s30=' '.join(["%5d %12.6f " % (i,ww[i]) for i in range(0,ww.get_dimension())]) 
@@ -954,14 +948,14 @@ for istep in range(0,NITER_):
             log.write("Drms                      %s" % s0+" copyID_"+str(i)+" "+s12[i]) #+" "+s13[i] )
             log.write("\n")
  
+        # and other useful data
+        rh.get_root_node().set_value(score_key,myscore)
+        rh.get_root_node().set_value(cross_key,mycross)
+        #rh.get_root_node().set_value(bias_key,mybias)
+        rh.get_root_node().set_value(index_key,myindex)
+
         # print all information of the current frame to rmf
         IMP.rmf.save_frame(rh,istep/W_STRIDE)
-        # and other useful data
-        (rh.get_root_node()).set_value(score_key,myscore,istep/W_STRIDE)
-        (rh.get_root_node()).set_value(cross_key,mycross,istep/W_STRIDE)
-        #(rh.get_root_node()).set_value(bias_key,mybias,istep/W_STRIDE)
-        (rh.get_root_node()).set_value(index_key,myindex,istep/W_STRIDE)
-
 
     # time for an exchange
     score=m.evaluate(False)
