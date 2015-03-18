@@ -1,8 +1,11 @@
+This directory contains all of the input data used in the modeling.
+
 `angle.py` and `dihedral.py` generate the data files for the CA forcefield
 used in this modeling (`CAAngleRestraint.dat` and `CADihedralRestraint.dat`
 respectively). They take as input a file `file.list` which is a list of
-filenames, each of which is the output of DSSP of a protein (typically
-`file.list` will cover a large subset of PDB).
+filenames, each of which is the output of
+[DSSP](http://www.cmbi.ru.nl/dssp.html) of a protein (typically `file.list`
+will cover a large subset of PDB).
 
 The format of the angle data file is simple; the first column lists the
 secondary structure class of a set of three contiguous residues, the second
@@ -14,5 +17,5 @@ angle between the first four CA atoms, the dihedral between the last four
 
 These data files are parsed by the modeling scripts (there is also similar, but
 not quite identical, code in the
-IMP.pmi.restraints.stereochemistry.SecondaryStructure class) and used to
-create IMP.atom.CAAngleRestraint and IMP.atom.CADihedralRestraint objects.
+`IMP.pmi.restraints.stereochemistry.SecondaryStructure` class) and used to
+create `IMP.atom.CAAngleRestraint` and `IMP.atom.CADihedralRestraint` objects.
