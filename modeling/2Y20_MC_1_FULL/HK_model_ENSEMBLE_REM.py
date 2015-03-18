@@ -301,7 +301,7 @@ def get_homology_restraint(model, maps, sigmaG, cutoff):
             p1=ps_model[j]
             
             # particles belonging to the same rigid body should not be restrained
-            if(IMP.core.RigidMember.get_is_setup(p0) and 
+            if(IMP.core.RigidMember.get_is_setup(p0) and
                IMP.core.RigidMember.get_is_setup(p1) and
                IMP.core.RigidMember(p0).get_rigid_body() == IMP.core.RigidMember(p1).get_rigid_body()): continue
 
