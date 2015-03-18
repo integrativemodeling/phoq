@@ -25,17 +25,17 @@ def read_alignments(filename,model,temp):
         riga=(line.strip()).split()
 
         try:
-         s1=IMP.atom.Selection(model, chains=riga[1], residue_index=int(riga[2]), residue_type=IMP.atom.get_residue_type(riga[0]), atom_type=IMP.atom.AT_CA)
-         p1=s1.get_selected_particles()[0]
+            s1=IMP.atom.Selection(model, chains=riga[1], residue_index=int(riga[2]), residue_type=IMP.atom.get_residue_type(riga[0]), atom_type=IMP.atom.AT_CA)
+            p1=s1.get_selected_particles()[0]
         except:
-         print "residue %d of chain %s not found in model" % (int(riga[2]),riga[1])
-         continue
+            print "residue %d of chain %s not found in model" % (int(riga[2]),riga[1])
+            continue
         try:
-         s2=IMP.atom.Selection(temp, chains=riga[4], residue_index=int(riga[5]), residue_type=IMP.atom.get_residue_type(riga[3]), atom_type=IMP.atom.AT_CA) 
-         p2=s2.get_selected_particles()[0]
+            s2=IMP.atom.Selection(temp, chains=riga[4], residue_index=int(riga[5]), residue_type=IMP.atom.get_residue_type(riga[3]), atom_type=IMP.atom.AT_CA)
+            p2=s2.get_selected_particles()[0]
         except:
-         print "residue %d of chain %s not found in template" % (int(riga[5]), riga[4])
-         continue
+            print "residue %d of chain %s not found in template" % (int(riga[5]), riga[4])
+            continue
 
         align[p1]=p2
 
@@ -43,7 +43,7 @@ def read_alignments(filename,model,temp):
     return align
 
 def load_pdb(m, name, filename):
-    prot=IMP.atom.read_pdb(filename,m,IMP.atom.CAlphaPDBSelector()) 
+    prot=IMP.atom.read_pdb(filename,m,IMP.atom.CAlphaPDBSelector())
     prot.set_name(name)
     return prot
 
@@ -53,7 +53,7 @@ def create_rigid_body(m, chain,res0,res1):
     for p in s.get_selected_particles():
         atoms.append(IMP.core.XYZR(p))
     prb=IMP.Particle(m)
-    rb=IMP.core.RigidBody.setup_particle(prb,atoms) 
+    rb=IMP.core.RigidBody.setup_particle(prb,atoms)
     return rb
 
 def get_excluded_volume(m, prot,kappa,excluded_residues=[]):
@@ -83,109 +83,109 @@ def get_distance_restraint(p0, p1, d0, kappa):
 
 def read_potential_dihedral(filename,string,mix=False):
 # read potentials for dihedral
-   score_dih=[]
-   phi0=[]; phi1=[]
-   for i in range(0,36):
-       phi0.append(i*10.0/180.0*math.pi)
-       phi1.append(i*10.0/180.0*math.pi)
-       for j in range(0,36):
-           score_dih.append(0.0)
-   # open file
+    score_dih=[]
+    phi0=[]; phi1=[]
+    for i in range(0,36):
+        phi0.append(i*10.0/180.0*math.pi)
+        phi1.append(i*10.0/180.0*math.pi)
+        for j in range(0,36):
+            score_dih.append(0.0)
+    # open file
 
-   
-   if not mix:
 
-     f = open(filename, 'r')   
-     for line in f.readlines():
-       riga=(line.strip()).split()
-       if (len(riga)==4 and riga[0]==string):
-         ii=int(float(riga[1])/10.0)
-         jj=int(float(riga[2])/10.0)
-         score_dih[ii*len(phi0)+jj]=-KT_CAFF_*math.log(float(riga[3]))
-     f.close()        
+    if not mix:
 
-   if mix:
-     #mix random coil and native secondary structure
-     counts=[]   
-     for i in range(0,36):
-       for j in range(0,36):
-           counts.append(1.0) 
-             
-     f = open(filename, 'r')  
-     for line in f.readlines():
-       riga=(line.strip()).split()
-       if (len(riga)==4 and riga[0]==string):
-         ii=int(float(riga[1])/10.0)
-         jj=int(float(riga[2])/10.0)
-         counts[ii*len(phi0)+jj]+=NATIVENESS_*float(riga[3])
-       if (len(riga)==4 and riga[0]=="-----"):
-         ii=int(float(riga[1])/10.0)
-         jj=int(float(riga[2])/10.0)
-         counts[ii*len(phi0)+jj]+=(1.0-NATIVENESS_)*float(riga[3])
+        f = open(filename, 'r')
+        for line in f.readlines():
+            riga=(line.strip()).split()
+            if (len(riga)==4 and riga[0]==string):
+                ii=int(float(riga[1])/10.0)
+                jj=int(float(riga[2])/10.0)
+                score_dih[ii*len(phi0)+jj]=-KT_CAFF_*math.log(float(riga[3]))
+        f.close()
 
-     f.close()
+    if mix:
+        #mix random coil and native secondary structure
+        counts=[]
+        for i in range(0,36):
+            for j in range(0,36):
+                counts.append(1.0)
 
-     for i in range(len(counts)):
-        score_dih[i]=-KT_CAFF_*math.log(counts[i])
-   
+        f = open(filename, 'r')
+        for line in f.readlines():
+            riga=(line.strip()).split()
+            if (len(riga)==4 and riga[0]==string):
+                ii=int(float(riga[1])/10.0)
+                jj=int(float(riga[2])/10.0)
+                counts[ii*len(phi0)+jj]+=NATIVENESS_*float(riga[3])
+            if (len(riga)==4 and riga[0]=="-----"):
+                ii=int(float(riga[1])/10.0)
+                jj=int(float(riga[2])/10.0)
+                counts[ii*len(phi0)+jj]+=(1.0-NATIVENESS_)*float(riga[3])
 
-   return [phi0,phi1,score_dih]
+        f.close()
+
+        for i in range(len(counts)):
+            score_dih[i]=-KT_CAFF_*math.log(counts[i])
+
+
+    return [phi0,phi1,score_dih]
 
 def read_potential_angle(filename,string,mix=False):
 # read potentials for angles
-   score_ang=[]
-   psi=[]
-   for i in range(0,180):
-       psi.append(i/180.0*math.pi)
-       score_ang.append(0.0)
-   # read file
+    score_ang=[]
+    psi=[]
+    for i in range(0,180):
+        psi.append(i/180.0*math.pi)
+        score_ang.append(0.0)
+    # read file
 
-   
-   if not mix:
 
-     f = open(filename, 'r')   
-     for line in f.readlines():
-       riga=(line.strip()).split()
-       if (len(riga)==3 and riga[0]==string):
-         ii=int(riga[1])
-         score_ang[ii]=-KT_CAFF_*math.log(float(riga[2]))
-     f.close()
-     
-   if mix:
-     #mix random coil and native secondary structure
-     counts=[]
-     for i in range(0,180):
-        counts.append(1.0)     
+    if not mix:
 
-     f = open(filename, 'r')     
-     for line in f.readlines():
-       riga=(line.strip()).split()
-       if (len(riga)==3 and riga[0]==string):
-         ii=int(riga[1])
-         counts[ii]+=NATIVENESS_*float(riga[2])
-       if (len(riga)==3 and riga[0]=="---"): 
-         ii=int(riga[1])
-         counts[ii]+=(1.0-NATIVENESS_)*float(riga[2])
-     f.close()
-     
+        f = open(filename, 'r')
+        for line in f.readlines():
+            riga=(line.strip()).split()
+            if (len(riga)==3 and riga[0]==string):
+                ii=int(riga[1])
+                score_ang[ii]=-KT_CAFF_*math.log(float(riga[2]))
+        f.close()
 
-     for i in range(0,180):
-        score_ang[i]=-KT_CAFF_*math.log(counts[i])
-        
-        
+    if mix:
+        #mix random coil and native secondary structure
+        counts=[]
+        for i in range(0,180):
+            counts.append(1.0)
 
-   return [psi,score_ang]
+        f = open(filename, 'r')
+        for line in f.readlines():
+            riga=(line.strip()).split()
+            if (len(riga)==3 and riga[0]==string):
+                ii=int(riga[1])
+                counts[ii]+=NATIVENESS_*float(riga[2])
+            if (len(riga)==3 and riga[0]=="---"):
+                ii=int(riga[1])
+                counts[ii]+=(1.0-NATIVENESS_)*float(riga[2])
+        f.close()
+
+
+        for i in range(0,180):
+            score_ang[i]=-KT_CAFF_*math.log(counts[i])
+
+
+
+    return [psi,score_ang]
 
 
 def get_CA_force_field(chain, resrange, dihe_dict, ang_dict, do_mix):
     rslist=[]
     pairslist=[]
     # add bonds
-    for res in range(resrange[0],resrange[1]): 
+    for res in range(resrange[0],resrange[1]):
         ps=[]
         for delta in range(0,2):
             s=IMP.atom.Selection(chain, residue_index=res+delta, atom_type=IMP.atom.AT_CA)
-            ps.append(s.get_selected_particles()[0]) 
+            ps.append(s.get_selected_particles()[0])
         pairslist.append(IMP.ParticlePair(ps[0],ps[1]))
         pairslist.append(IMP.ParticlePair(ps[1],ps[0]))
         br=get_distance_restraint(ps[0],ps[1],3.78,416.0)
@@ -207,8 +207,8 @@ def get_CA_force_field(chain, resrange, dihe_dict, ang_dict, do_mix):
         pairslist.append(IMP.ParticlePair(ps[4],ps[1]))
         dr=IMP.atom.CADihedralRestraint(ps[0],ps[1],ps[2],ps[3],ps[4],phi0,phi1,score_dih)
         dr.set_name('Dihedral restraint')
-        rslist.append(dr) 
-    # add angles 
+        rslist.append(dr)
+    # add angles
     for res in range(resrange[0],resrange[1]+1):
         if res not in ang_dict: continue
         # get the appropriate parameters
@@ -222,7 +222,7 @@ def get_CA_force_field(chain, resrange, dihe_dict, ang_dict, do_mix):
         pairslist.append(IMP.ParticlePair(ps[2],ps[0]))
         dr=IMP.atom.CAAngleRestraint(ps[0],ps[1],ps[2],psi,score_ang)
         dr.set_name('Angle restraint')
-        rslist.append(dr) 
+        rslist.append(dr)
     return (rslist,pairslist)
 
 def get_homology_restraint(m, model, maps, sigmaG, cutoff):
@@ -248,43 +248,43 @@ def get_homology_restraint(m, model, maps, sigmaG, cutoff):
         p0=ps_model[i]
         for j in range(i+1,len(ps_model)):
             p1=ps_model[j]
-            
+
             # particles belonging to the same rigid body should not be restrained
-            if(IMP.core.RigidMember.get_is_setup(p0) and 
+            if(IMP.core.RigidMember.get_is_setup(p0) and
                IMP.core.RigidMember.get_is_setup(p1) and
                IMP.core.RigidMember(p0).get_rigid_body() == IMP.core.RigidMember(p1).get_rigid_body()): continue
 
             # cycle over all the dictionaries
-            npair=0 
+            npair=0
             nclose=0
             for key in maps:
                 mk=maps[key]
-                if (p0 in mk and p1 in mk): 
-                 # get distance in the template 
-                 dist0=IMP.core.get_distance(IMP.core.XYZ(mk[p0]),IMP.core.XYZ(mk[p1]))
-                 # nclose is the number of templates in which the pair distance is lower than cutoff
-                 if(dist0<cutoff): nclose+=1
-                 # npair is the number of templates in which the pair exists
-                 npair+=1
+                if (p0 in mk and p1 in mk):
+                    # get distance in the template
+                    dist0=IMP.core.get_distance(IMP.core.XYZ(mk[p0]),IMP.core.XYZ(mk[p1]))
+                    # nclose is the number of templates in which the pair distance is lower than cutoff
+                    if(dist0<cutoff): nclose+=1
+                    # npair is the number of templates in which the pair exists
+                    npair+=1
             # if the pair exists in all the templates and it is lower than the cutoff at least in one, add restraint
             if(npair==len(maps) and nclose>0):
-              for key in maps:
-                mk=maps[key] 
-                dist_dict[(key,p0,p1)]=IMP.core.get_distance(IMP.core.XYZ(mk[p0]),IMP.core.XYZ(mk[p1]))
-                
-              # define kappa and lower and upper bounds
-              kappa=IMP.isd.Scale.setup_particle(IMP.Particle(m),1.0)
-              kappa.set_lower(0.0)
-              kappa.set_upper(float(npair-1))
-              if(npair>1): kappa.set_is_optimized(kappa.get_nuisance_key(),True)
-              else: kappa.set_is_optimized(kappa.get_nuisance_key(),False)
-              r0=IMP.atom.Residue(IMP.atom.Atom(p0).get_parent()).get_index()
-              r1=IMP.atom.Residue(IMP.atom.Atom(p1).get_parent()).get_index() 
-              kappas[str(r0)+"-"+str(r1)]=kappa
-              lnar=IMP.isd.LognormalAmbiguousRestraint(p0,p1,kappa,sigmaG)
-              for key in maps:
-                   lnar.add_contribution(dist_dict[(key,p0,p1)],omegas[key])
-              rset.add_restraint(lnar)
+                for key in maps:
+                    mk=maps[key]
+                    dist_dict[(key,p0,p1)]=IMP.core.get_distance(IMP.core.XYZ(mk[p0]),IMP.core.XYZ(mk[p1]))
+
+                # define kappa and lower and upper bounds
+                kappa=IMP.isd.Scale.setup_particle(IMP.Particle(m),1.0)
+                kappa.set_lower(0.0)
+                kappa.set_upper(float(npair-1))
+                if(npair>1): kappa.set_is_optimized(kappa.get_nuisance_key(),True)
+                else: kappa.set_is_optimized(kappa.get_nuisance_key(),False)
+                r0=IMP.atom.Residue(IMP.atom.Atom(p0).get_parent()).get_index()
+                r1=IMP.atom.Residue(IMP.atom.Atom(p1).get_parent()).get_index()
+                kappas[str(r0)+"-"+str(r1)]=kappa
+                lnar=IMP.isd.LognormalAmbiguousRestraint(p0,p1,kappa,sigmaG)
+                for key in maps:
+                    lnar.add_contribution(dist_dict[(key,p0,p1)],omegas[key])
+                rset.add_restraint(lnar)
 
     return kappas,omegas,rset,dist_dict
 
@@ -306,23 +306,23 @@ def get_elastic_restraint(m, model, residlist, sigmaG, cutoff):
         p0=ps_model[i]
         for j in range(i+1,len(ps_model)):
             p1=ps_model[j]
-            
+
             # particles belonging to the same rigid body should not be restrained
-            if(IMP.core.RigidMember.get_is_setup(p0) and 
+            if(IMP.core.RigidMember.get_is_setup(p0) and
                IMP.core.RigidMember.get_is_setup(p1) and
                IMP.core.RigidMember(p0).get_rigid_body() == IMP.core.RigidMember(p1).get_rigid_body()): continue
 
-            # get distance in the template 
+            # get distance in the template
             dist0=IMP.core.get_distance(IMP.core.XYZ(p0),IMP.core.XYZ(p1))
             if(dist0<cutoff):
-              # define kappa and lower and upper bounds
-              kappa=IMP.isd.Scale.setup_particle(IMP.Particle(m),0.0)
-              kappa.set_lower(0.0)
-              kappa.set_upper(0.0)
-              kappa.set_is_optimized(kappa.get_nuisance_key(),False)
-              lnar=IMP.isd.LognormalAmbiguousRestraint(p0,p1,kappa,sigmaG)
-              lnar.add_contribution(dist0,omega)
-              rslist.append(lnar)
+                # define kappa and lower and upper bounds
+                kappa=IMP.isd.Scale.setup_particle(IMP.Particle(m),0.0)
+                kappa.set_lower(0.0)
+                kappa.set_upper(0.0)
+                kappa.set_is_optimized(kappa.get_nuisance_key(),False)
+                lnar=IMP.isd.LognormalAmbiguousRestraint(p0,p1,kappa,sigmaG)
+                lnar.add_contribution(dist0,omega)
+                rslist.append(lnar)
 
     return omega,rslist
 
@@ -334,7 +334,7 @@ def get_kink_restraint(m, rbpairs, kappa):
         pr=IMP.core.PairRestraint(kps,IMP.ParticlePair(rbs[0],rbs[1]))
         rset.add_restraint(pr)
     return rset
-    
+
 def get_prior(m, sigmas):
     rslist=[]
     for sigma in sigmas:
@@ -351,7 +351,7 @@ def get_rb_movers(rblist,rmax,tmax):
 
 def get_ball_movers(ps,tmax):
     mvs=[]
-    for p in ps: 
+    for p in ps:
         mv= IMP.core.BallMover([p], tmax)
         mvs.append(mv)
     return mvs
@@ -364,50 +364,50 @@ def get_nuisance_movers(omegas,maxstep):
 
 def get_drms(align,dist_dict):
     drms={}
-    npairs={} 
+    npairs={}
     for key in align:
-        drms[key]=0.0    
+        drms[key]=0.0
         npairs[key]=0.0
 
     for key in dist_dict:
         k0=key[0]
         p0=key[1]
         p1=key[2]
-        dist=IMP.core.get_distance(IMP.core.XYZ(p0),IMP.core.XYZ(p1)) 
+        dist=IMP.core.get_distance(IMP.core.XYZ(p0),IMP.core.XYZ(p1))
         dist0=dist_dict[key]
         drms[key[0]]+=(dist-dist0)*(dist-dist0)
         npairs[key[0]]+=1.0
-   
+
     for key in drms:
         drms[key]=math.sqrt(drms[key]/npairs[key])
 
     return drms
 
 def simulated_annealing(nuisances,signs,istep,ncold,nhot):
-     if istep%(ncold+nhot)< ncold:
+    if istep%(ncold+nhot)< ncold:
         value=0.0
-     else:
+    else:
         a=float(istep%(ncold+nhot)-ncold)
         value=1.0/4.0*((1.0-math.cos(2*math.pi*a/float(nhot))))**2
 # nuisances is a list of nuisance parameters,
 # signs is a list of sign for the direction of the annealing
-     for i,nus in enumerate(nuisances):
-         nus.set_scale(0.5*(1.0+signs[i])*nus.get_lower()+0.5*(1.0-signs[i])*nus.get_upper()+signs[i]*(nus.get_upper()-nus.get_lower())*value)
+    for i,nus in enumerate(nuisances):
+        nus.set_scale(0.5*(1.0+signs[i])*nus.get_lower()+0.5*(1.0-signs[i])*nus.get_upper()+signs[i]*(nus.get_upper()-nus.get_lower())*value)
 
-def get_grid(gmin,gmax,ngrid,boundaries):                                        
-    grid=[]                                                                      
-    dx = ( gmax - gmin ) / float(ngrid)                                          
-    for i in range(0,ngrid+1):                                                   
-        if(not boundaries and i==0): continue                                    
-        if(not boundaries and i==ngrid): continue                                
-        grid.append( gmin + float(i) * dx )                                      
-    return grid                                                                  
-                                                                                 
-def get_log_grid(gmin,gmax,ngrid):                                               
-   grid=[]                                                                       
-   for i in range(0,ngrid+1):                                                    
-       grid.append( gmin*math.exp(float(i)/ngrid*math.log(gmax/gmin)) )                    
-   return grid
+def get_grid(gmin,gmax,ngrid,boundaries):
+    grid=[]
+    dx = ( gmax - gmin ) / float(ngrid)
+    for i in range(0,ngrid+1):
+        if(not boundaries and i==0): continue
+        if(not boundaries and i==ngrid): continue
+        grid.append( gmin + float(i) * dx )
+    return grid
+
+def get_log_grid(gmin,gmax,ngrid):
+    grid=[]
+    for i in range(0,ngrid+1):
+        grid.append( gmin*math.exp(float(i)/ngrid*math.log(gmax/gmin)) )
+    return grid
 
 def get_crosslink_restraint(m, protein_copies, filename):
     rset=IMP.RestraintSet(m, 'Cysteine_Crosslink')
@@ -421,7 +421,7 @@ def get_crosslink_restraint(m, protein_copies, filename):
     beta.set_upper(BETA_)
     beta.set_is_optimized(beta.get_nuisance_key(),False)
 
-    # sigma 
+    # sigma
     sigma=IMP.isd.Scale.setup_particle(IMP.Particle(m),1.0)
     sigma.set_lower(0.0)
     sigma.set_upper(1.0)
@@ -432,40 +432,40 @@ def get_crosslink_restraint(m, protein_copies, filename):
     upperb["16-41"]=1.0-0.628809
     upperb["42-65"]=1.0-0.922462
     upperb["185-226"]=1.0-0.693342
- 
-    # epsilon particles 
+
+    # epsilon particles
     for id in ["16-41","42-65","185-226"]:
         epsilonscale=IMP.isd.Scale.setup_particle(IMP.Particle(m),0.01)
         epsilonscale.set_lower(0.01)
         epsilonscale.set_upper(upperb[id])
         epsilonscale.set_is_optimized(epsilonscale.get_nuisance_key(),True)
         epsilons[id]=epsilonscale
-   
-    # population particle 
-    pw=IMP.Particle(m)                                                               
-    weight=IMP.isd.Weight.setup_particle(pw)                                        
+
+    # population particle
+    pw=IMP.Particle(m)
+    weight=IMP.isd.Weight.setup_particle(pw)
     weight.set_weights_are_optimized(True)
 
     # create grids needed by CrossLinkData
-    dist_grid=get_grid(0.0,25.0, NGRID_, False)  
+    dist_grid=get_grid(0.0,25.0, NGRID_, False)
     omega1_grid=get_log_grid(1.0, 1000.0, 50)
     sigma_grid=[1.0]
     # read PMF from file
     xlpot=open("../data/cysteine_FES.dat")
-    pot_x_grid=[]                                                                      
-    pot_value_grid=[]                                                                   
-    for line in xlpot:                                                               
-        t=line.split()                                                               
-        if t[0][0]!="#":                                                             
-           x = float(t[0])*10.0
-           pot_x_grid.append(x)
-           pot_value_grid.append(float(t[1])/4.0/math.pi/x/x)
-    # CrossLinkMSData 
+    pot_x_grid=[]
+    pot_value_grid=[]
+    for line in xlpot:
+        t=line.split()
+        if t[0][0]!="#":
+            x = float(t[0])*10.0
+            pot_x_grid.append(x)
+            pot_value_grid.append(float(t[1])/4.0/math.pi/x/x)
+    # CrossLinkMSData
     crossdata=IMP.isd.CrossLinkData(dist_grid,omega1_grid,sigma_grid,pot_x_grid,pot_value_grid,10.0,20.0)
 
     # create grids needed by CysteineCrossLinkData
     fmod_grid=get_grid(0.0, 1.0, 300, True)
-    omega2_grid=get_log_grid(0.001, 10000.0, 100) 
+    omega2_grid=get_log_grid(0.001, 10000.0, 100)
 
     # open file with cross-link data
     f=open(filename,"r")
@@ -499,22 +499,22 @@ def get_crosslink_restraint(m, protein_copies, filename):
             ccl.add_contribution(p1,p2)
 
         ccl.set_name(str(resid1))
-        rset.add_restraint(ccl) 
+        rset.add_restraint(ccl)
 
         # build dictionaries
         expdict[str(resid1)]=fexp
 
     return rset,expdict,beta,epsilons,pw
 
-def get_Ez_potential(m, protein,boundaries): 
+def get_Ez_potential(m, protein,boundaries):
     rset=IMP.RestraintSet(m, 'Ez_potential')
     ps=[]
-    for boundary in boundaries: 
+    for boundary in boundaries:
         s=IMP.atom.Selection(protein, residue_indexes=range(*boundary))
         ps+=s.get_selected_particles()
     ez=IMP.atom.EzRestraint(ps)
     rset.add_restraint(ez)
-    return rset 
+    return rset
 
 def initialize_coordinates(m, protein):
     rb=IMP.atom.create_rigid_body(protein)
@@ -528,13 +528,13 @@ def initialize_coordinates(m, protein):
         IMP.algebra.Vector3D(0,0,+14.0))))
     IMP.core.RigidBody.teardown_particle(rb)
     m.remove_particle(rb)
- 
+
 def get_layer_restraint(m, protein,resid,zrange,kappa):
     rset=IMP.RestraintSet(m, 'Layer_restraint')
     lsc=IMP.container.ListSingletonContainer(m)
     s=IMP.atom.Selection(protein, residue_index=resid, atom_type=IMP.atom.AT_CA)
     lsc.add_particles(s.get_selected_particles())
-    hw=IMP.core.HarmonicWell(zrange,kappa) 
+    hw=IMP.core.HarmonicWell(zrange,kappa)
     asc=IMP.core.AttributeSingletonScore(hw,IMP.FloatKey("z"))
     sr=IMP.container.SingletonsRestraint(asc, lsc)
     rset.add_restraint(sr)

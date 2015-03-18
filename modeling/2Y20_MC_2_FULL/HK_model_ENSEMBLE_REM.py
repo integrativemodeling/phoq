@@ -49,10 +49,10 @@ rem=ReplicaExchange()
 nproc=rem.get_number_of_replicas()
 # create array of temperature
 temp_array=rem.create_temperatures(TEMPMIN_,TEMPMAX_,nproc)
-# get my replica index      
+# get my replica index
 myindex=rem.get_my_index()
 
-# set initial value for temperature 
+# set initial value for temperature
 tempval=temp_array[myindex]
 
 # set parameters
@@ -95,7 +95,7 @@ dihe_dict[42]="HH---";     ang_dict[42]="H--";   do_mix[42]=False
 dihe_dict[43]="H---H";     ang_dict[43]="---";   do_mix[43]=False
 dihe_dict[44]="---HH";     ang_dict[44]="--H";   do_mix[44]=False
 dihe_dict[45]="--HHH";     ang_dict[45]="-HH";   do_mix[45]=False
-# 184-194: from 186 to 189 coiled-coil, helical otherwise 
+# 184-194: from 186 to 189 coiled-coil, helical otherwise
 dihe_dict[184]="HHHH-";    ang_dict[184]="HHH";  do_mix[184]=False
 dihe_dict[185]="HHH--";    ang_dict[185]="HH-";  do_mix[185]=False
 dihe_dict[186]="HH---";    ang_dict[186]="H--";  do_mix[186]=False
@@ -107,7 +107,7 @@ dihe_dict[191]="-HHHH";    ang_dict[191]="HHH";  do_mix[191]=False
 dihe_dict[192]="HHHHH";    ang_dict[192]="HHH";  do_mix[192]=False
 dihe_dict[193]="HHHHH";    ang_dict[193]="HHH";  do_mix[193]=False
 dihe_dict[194]="HHHHH";    ang_dict[194]="HHH";  do_mix[194]=False
-# 205-208: PRO 208 kink 
+# 205-208: PRO 208 kink
 dihe_dict[205]="HHHHH";    ang_dict[205]="HHH"; do_mix[205]=True
 dihe_dict[206]="HHHHH";    ang_dict[206]="HHH"; do_mix[206]=True
 dihe_dict[207]="HHHHH";    ang_dict[207]="HHH"; do_mix[207]=True
@@ -181,7 +181,7 @@ hamp_dist_dict_copies=[]
 # HAMP DOMAIN
 # 1) 3ZRX
 #template1=load_pdb(m, "template1","../data/3ZRX.pdb")
-# 2) 2Y20_A_B 
+# 2) 2Y20_A_B
 template2=load_pdb(m, "template2","../data/2Y20_A_B.pdb")
 
 # PERIPLASMIC
@@ -201,13 +201,13 @@ for i in range(0,NCOPIES_):
     hamp_kappas_copies.append(hamp_kappas)
     hamp_omegas_copies.append(hamp_omegas)
     hamp_dist_dict_copies.append(hamp_dist_dict)
-     
+
     global_rset['Homology_Hamp::'+str(i)]=rset
     # add to list of ISD particles for rmf I/O
     for key in hamp_kappas:
         ISD_particles.append(hamp_kappas[key])
     for key in hamp_omegas:
-        ISD_particles.append(hamp_omegas[key])   
+        ISD_particles.append(hamp_omegas[key])
 
     #peri_align={}
     #peri_align['3BQ8']=read_alignments("PHOQ-3BQ8.align",PHOQ[i],template3)
@@ -223,7 +223,7 @@ for i in range(0,NCOPIES_):
     #for key in peri_kappas:
     #    ISD_particles.append(peri_kappas[key])
     #for key in peri_omegas:
-    #    ISD_particles.append(peri_omegas[key]) 
+    #    ISD_particles.append(peri_omegas[key])
 
 
 # Cross-link restraint
@@ -236,10 +236,10 @@ for key in crosslink_epsilons:
 
 # Jeffrey Prior for omegas
 for i in range(0,NCOPIES_):
-   global_rset['Prior::'+str(i)]=IMP.RestraintSet(m)
-   global_rset['Prior::'+str(i)].add_restraints(get_prior(m, hamp_omegas_copies[i]))
-   #global_rset['Prior::'+str(i)].add_restraints(get_prior(m, peri_omegas_copies[i]))
-   #global_rset['Prior::'+str(i)].add_restraints(get_prior(m, elastic_omegas_copies[i]))
+    global_rset['Prior::'+str(i)]=IMP.RestraintSet(m)
+    global_rset['Prior::'+str(i)].add_restraints(get_prior(m, hamp_omegas_copies[i]))
+    #global_rset['Prior::'+str(i)].add_restraints(get_prior(m, peri_omegas_copies[i]))
+    #global_rset['Prior::'+str(i)].add_restraints(get_prior(m, elastic_omegas_copies[i]))
 
 # Boundaries for Weight
 global_rset['Weight Boundaries']=IMP.isd.WeightRestraint(crosslink_pw,0.2,0.8,100000.)
@@ -269,7 +269,7 @@ for rset in global_rset:
 
 # Set coordinates as not optimized
 for i in range(0,NCOPIES_):
-    for atom in IMP.atom.get_leaves(PHOQ[i]): 
+    for atom in IMP.atom.get_leaves(PHOQ[i]):
         IMP.core.XYZR(atom).set_coordinates_are_optimized(True)
 
 # Movers
@@ -281,17 +281,17 @@ ps=[]
 for i in range(0,NCOPIES_):
     for p in IMP.atom.get_leaves(PHOQ[i]):
         if(IMP.core.RigidMember.get_is_setup(p)==False):
-          ps.append(p)
+            ps.append(p)
 mvs+=get_ball_movers(ps,MAXTRANS_)
 
-# Movers for omegas 
+# Movers for omegas
 for i in range(0,NCOPIES_):
     mvs+=get_nuisance_movers(hamp_omegas_copies[i],MAXOMEGA_)
     #mvs+=get_nuisance_movers(peri_omegas_copies[i],MAXOMEGA_)
     #mvs+=get_nuisance_movers(elastic_omegas_copies[i],MAXOMEGA_)
 
-# Movers for epsilons 
-mvs+=get_nuisance_movers(crosslink_epsilons,MAXEPSILON_) 
+# Movers for epsilons
+mvs+=get_nuisance_movers(crosslink_epsilons,MAXEPSILON_)
 
 # Movers for weight
 mvs.append(IMP.isd.WeightMover(crosslink_pw,MAXWEIGHT_))
@@ -331,7 +331,7 @@ for istep in range(0,NITER_):
 
     # Monte Carlo
     mc.optimize(NOPT_)
- 
+
     #for i in range(0,len(mvs)):
     #    print i,smv.get_acceptance(i)
 
@@ -344,19 +344,19 @@ for istep in range(0,NITER_):
         # get DRMS for hamp and peri domain
             hamp_drms_copies.append(get_drms(hamp_align_copies[i],hamp_dist_dict_copies[i]))
             #peri_drms_copies.append(get_drms(peri_align_copies[i],peri_dist_dict_copies[i]))
- 
+
         # get total score, bias potential and cross-link score for RMF
         myscore=m.evaluate(False)
         #mybias=mc.get_bias(myscore)
         mycross=global_rset['Cross-link'].evaluate(False)
 
-        # get weights                                                            
+        # get weights
         ww=IMP.isd.Weight(crosslink_pw).get_weights()
- 
+
         # prepare printout
         s0="%12d " % (istep)
         s00="%12d " % (myindex)
-        #s000="%12.6f " % (mybias)   
+        #s000="%12.6f " % (mybias)
         s0000="%12.6f " % (mc.get_kt())
         s1="%12.6f " % (mc.get_number_of_forward_steps()/float(NOPT_))
         s2=' '.join(["%5s %12.6f " % (kkey,global_rset[kkey].evaluate(False)) for kkey in global_rset])
@@ -364,10 +364,10 @@ for istep in range(0,NITER_):
         #s7=' '.join(["%5s %12.6f " % (kkey,betas[kkey].get_scale()) for kkey in betas])
         s9=' '.join(["%5s %12.6f " % (IMP.isd.CysteineCrossLinkRestraint.get_from(rst).get_name(),IMP.isd.CysteineCrossLinkRestraint.get_from(rst).get_model_frequency()) for rst in global_rset['Cross-link'].get_restraints()])
         s10=' '.join(["%5s %12.6f " % (kkey,crosslink_expdict[kkey]) for kkey in crosslink_expdict])
-        s11=' '.join(["%5s %12.6f " % (IMP.isd.CysteineCrossLinkRestraint.get_from(rst).get_name(),IMP.isd.CysteineCrossLinkRestraint.get_from(rst).get_standard_error()) for rst in global_rset['Cross-link'].get_restraints()]) 
+        s11=' '.join(["%5s %12.6f " % (IMP.isd.CysteineCrossLinkRestraint.get_from(rst).get_name(),IMP.isd.CysteineCrossLinkRestraint.get_from(rst).get_standard_error()) for rst in global_rset['Cross-link'].get_restraints()])
         s14="Total_energy %lf" % (myscore)
         s20=' '.join(["%5s %12.6f " % (kkey,crosslink_epsilons[kkey].get_scale()) for kkey in crosslink_epsilons])
-        s30=' '.join(["%5d %12.6f " % (i,ww[i]) for i in range(0,ww.get_dimension())]) 
+        s30=' '.join(["%5d %12.6f " % (i,ww[i]) for i in range(0,ww.get_dimension())])
 
         # printout copy-dependent
         s3=[]; s4=[]; s5=[]; s12=[]; s13=[];
@@ -377,8 +377,8 @@ for istep in range(0,NITER_):
             #s5.append(' '.join(["%5s %12.6f " % (kkey,elastic_omegas_copies[i][kkey].get_scale()) for kkey in elastic_omegas_copies[i]]))
             s12.append(' '.join(["hamp %5s %12.6f " % (kkey,hamp_drms_copies[i][kkey]) for kkey in hamp_drms_copies[i]]))
             #s13.append(' '.join(["peri %5s %12.6f " % (kkey,peri_drms_copies[i][kkey]) for kkey in peri_drms_copies[i]]))
-  
- 
+
+
         log.write("REM_Index                 %s" % s0+s00             )
         log.write("\n")
         log.write("Acceptance                %s" % s0+" "+s1          )
@@ -401,7 +401,7 @@ for istep in range(0,NITER_):
         log.write("Crosslink_exp_data        %s" % s0+" "+s10         )
         log.write("\n")
         log.write("Crosslink_standard_error  %s" % s0+" "+s11         )
-        log.write("\n") 
+        log.write("\n")
         #log.write("Sigmas                    %s" % s0+" "+s6          )
         #log.write("\n")
         #log.write("Betas                     %s" % s0+" "+s7          )
@@ -414,7 +414,7 @@ for istep in range(0,NITER_):
         for i in range(0,NCOPIES_):
             log.write("Drms                      %s" % s0+" copyID_"+str(i)+" "+s12[i]) #+" "+s13[i] )
             log.write("\n")
- 
+
         # and other useful data
         rh.get_root_node().set_value(score_key,myscore)
         rh.get_root_node().set_value(cross_key,mycross)
@@ -428,25 +428,25 @@ for istep in range(0,NITER_):
     score=m.evaluate(False)
     # get my index
     myindex=rem.get_my_index()
-    # get my parameters 
+    # get my parameters
     mytemp=rem.get_my_parameter("temp")[0]
     #mybias=mc.get_bias_asfloats()
     #rem.set_my_parameter("bias",mybias)
     # calculate model score
     myscore=score / mytemp
 
-    # get friend's index 
+    # get friend's index
     findex=rem.get_friend_index(istep)
-    # get friend's parameters 
+    # get friend's parameters
     ftemp=rem.get_friend_parameter("temp",findex)[0]
     # calculate model score
     fscore=score / ftemp
 
     # try exchange
     flag=rem.do_exchange(myscore,fscore,findex)
-    # if accepted, change temperature 
+    # if accepted, change temperature
     if (flag==True):
-       mc.set_kt(ftemp)
+        mc.set_kt(ftemp)
 
 # close all files
 log.close()
