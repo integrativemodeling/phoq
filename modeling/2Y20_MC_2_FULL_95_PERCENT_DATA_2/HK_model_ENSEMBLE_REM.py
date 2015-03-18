@@ -502,7 +502,7 @@ def get_crosslink_restraint(protein_copies, filename):
     omega1_grid=get_log_grid(1.0, 1000.0, 50)
     sigma_grid=[1.0]
     # read PMF from file
-    xlpot=open("cysteine_FES.dat")                                                   
+    xlpot=open("../data/cysteine_FES.dat")
     pot_x_grid=[]                                                                      
     pot_value_grid=[]                                                                   
     for line in xlpot:                                                               
@@ -594,7 +594,7 @@ def get_layer_restraint(protein,resid,zrange,kappa):
 # read initial model
 PHOQ=[]
 #filelist=["model_A.pdb","model_B.pdb"]
-filelist=["PHOQ_PERI_initial_model.pdb","PHOQ_PERI_initial_model.pdb","PHOQ_PERI_initial_model.pdb"]
+filelist=["../data/PHOQ_PERI_initial_model.pdb"] * 3
 for i in range(0,NCOPIES_):
     PHOQ.append(load_pdb("PHOQ copy "+str(i),filelist[i]))
 
@@ -713,21 +713,21 @@ hamp_dist_dict_copies=[]
 
 # HAMP DOMAIN
 # 1) 3ZRX
-#template1=load_pdb("template1","3ZRX.pdb")
+#template1=load_pdb("template1","../data/3ZRX.pdb")
 # 2) 2Y20_A_B 
-template2=load_pdb("template2","2Y20_A_B.pdb")
+template2=load_pdb("template2","../data/2Y20_A_B.pdb")
 
 # PERIPLASMIC
 #peri_align_copies=[]
 #peri_kappas_copies=[]
 #peri_omegas_copies=[]
 #peri_dist_dict_copies=[]
-#template3=load_pdb("template3","3BQ8.pdb")
+#template3=load_pdb("template3","../data/3BQ8.pdb")
 
 for i in range(0,NCOPIES_):
     hamp_align={}
-    #hamp_align['3ZRX']=read_alignments("PHOQ-3ZRX.align",PHOQ[i],template1)
-    hamp_align['2Y20']=read_alignments("PHOQ-2Y20.align",PHOQ[i],template2)
+    #hamp_align['3ZRX']=read_alignments("../data/PHOQ-3ZRX.align",PHOQ[i],template1)
+    hamp_align['2Y20']=read_alignments("../data/PHOQ-2Y20.align",PHOQ[i],template2)
     hamp_align_copies.append(hamp_align)
 
     (hamp_kappas,hamp_omegas,rset,hamp_dist_dict)=get_homology_restraint(PHOQ[i],hamp_align,sigmaG,HOMOLOGY_CUTOFF_)
