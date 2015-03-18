@@ -1,8 +1,4 @@
-import dl
 import sys
-flags = sys.getdlopenflags()
-sys.setdlopenflags(flags | dl.RTLD_GLOBAL)
-
 import IMP
 import IMP.algebra
 import IMP.atom
