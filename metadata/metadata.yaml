@@ -1,3 +1,6 @@
 title: PhoQ
 tags: [cysteine crosslinks, multi-state]
 pmid: 25087511
+test:
+    runtime: 24h
+    build: release
