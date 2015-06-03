@@ -178,7 +178,7 @@ def read_potential_angle(filename,string,mix=False):
     return [psi,score_ang]
 
 
-def get_CA_force_field(chain, resrange, dihe_dict, ang_dict, do_mix):
+def get_CA_force_field(m, chain, resrange, dihe_dict, ang_dict, do_mix):
     rslist=[]
     pairslist=[]
     # add bonds
@@ -206,7 +206,7 @@ def get_CA_force_field(chain, resrange, dihe_dict, ang_dict, do_mix):
         pairslist.append(IMP.ParticlePair(ps[3],ps[0]))
         pairslist.append(IMP.ParticlePair(ps[1],ps[4]))
         pairslist.append(IMP.ParticlePair(ps[4],ps[1]))
-        dr=IMP.atom.CADihedralRestraint(ps[0],ps[1],ps[2],ps[3],ps[4],phi0,phi1,score_dih)
+        dr=IMP.atom.CADihedralRestraint(m, ps[0],ps[1],ps[2],ps[3],ps[4],phi0,phi1,score_dih)
         dr.set_name('Dihedral restraint')
         rslist.append(dr)
     # add angles
@@ -221,7 +221,7 @@ def get_CA_force_field(chain, resrange, dihe_dict, ang_dict, do_mix):
             ps.append(s.get_selected_particles()[0])
         pairslist.append(IMP.ParticlePair(ps[0],ps[2]))
         pairslist.append(IMP.ParticlePair(ps[2],ps[0]))
-        dr=IMP.atom.CAAngleRestraint(ps[0],ps[1],ps[2],psi,score_ang)
+        dr=IMP.atom.CAAngleRestraint(m, ps[0],ps[1],ps[2],psi,score_ang)
         dr.set_name('Angle restraint')
         rslist.append(dr)
     return (rslist,pairslist)

@@ -131,7 +131,7 @@ for i in range(0,NCOPIES_):
     excvol_filter['Excluded_Volume::'+str(i)]=IMP.container.ListPairContainer(m)
     for chain in IMP.atom.get_by_type(PHOQ[i], IMP.atom.CHAIN_TYPE):
         for res in floppyres:
-            (rstlist,pairslist)=get_CA_force_field(chain,res,dihe_dict,ang_dict,do_mix)
+            (rstlist,pairslist)=get_CA_force_field(m, chain,res,dihe_dict,ang_dict,do_mix)
             excvol_filter['Excluded_Volume::'+str(i)].add_particle_pairs(pairslist)
             global_rset['CAForceField::'+str(i)].add_restraints(rstlist)
 
