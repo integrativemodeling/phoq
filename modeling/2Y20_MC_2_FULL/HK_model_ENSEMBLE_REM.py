@@ -424,7 +424,7 @@ for istep in range(0,NITER_):
         rh.get_root_node().set_value(index_key,myindex)
 
         # print all information of the current frame to rmf
-        IMP.rmf.save_frame(rh,istep/W_STRIDE)
+        IMP.rmf.save_frame(rh)
 
     # time for an exchange
     score=m.evaluate(False)
