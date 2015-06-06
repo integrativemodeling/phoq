@@ -360,7 +360,7 @@ for istep in range(0,NITER_):
         s00="%12d " % (myindex)
         #s000="%12.6f " % (mybias)
         s0000="%12.6f " % (mc.get_kt())
-        s1="%12.6f " % (mc.get_number_of_forward_steps()/float(NOPT_))
+        s1="%12.6f " % (mc.get_number_of_accepted_steps()/float(NOPT_))
         s2=' '.join(["%5s %12.6f " % (kkey,global_rset[kkey].evaluate(False)) for kkey in global_rset])
         #s6=' '.join(["%5s %12.6f " % (kkey,sigmas[kkey].get_scale()) for kkey in sigmas])
         #s7=' '.join(["%5s %12.6f " % (kkey,betas[kkey].get_scale()) for kkey in betas])
