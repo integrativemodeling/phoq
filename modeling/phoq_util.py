@@ -488,7 +488,8 @@ def get_crosslink_restraint(m, protein_copies, filename):
         if( 42 <= resid1 <= 65):   id="42-65"
         if(185 <= resid1 <=226): id="185-226"
 
-        ccl=IMP.isd.CysteineCrossLinkRestraint(beta,sigma,epsilons[id],pw,crossdata,ccldata)
+        ccl=IMP.isd.CysteineCrossLinkRestraint(m, beta, sigma, epsilons[id], pw,
+                                               crossdata, ccldata)
 
         for i,prot in enumerate(protein_copies):
             s1=IMP.atom.Selection(prot, chains=chain1, residue_index=resid1, atom_type=IMP.atom.AT_CA)
