@@ -513,8 +513,8 @@ def get_Ez_potential(m, protein,boundaries):
     ps=[]
     for boundary in boundaries:
         s=IMP.atom.Selection(protein, residue_indexes=range(*boundary))
-        ps+=s.get_selected_particles()
-    ez=IMP.atom.EzRestraint(ps)
+        ps+=s.get_selected_particle_indexes()
+    ez=IMP.atom.EzRestraint(m, ps)
     rset.add_restraint(ez)
     return rset
 
