@@ -265,9 +265,8 @@ for i in range(0,NCOPIES_):
 #    hpairs.append([rblist["B_194-205::"+str(i)],rblist["B_208-217::"+str(i)]])
 #    global_rset['Kink::'+str(i)]=get_kink_restraint(m, hpairs, 100.0*KAPPA_)
 
-# add restraints to model
-for rset in global_rset:
-    m.add_restraint(global_rset[rset])
+# make scoring function
+sf = IMP.core.RestraintsScoringFunction(global_rset.values())
 
 # Set coordinates as not optimized
 for i in range(0,NCOPIES_):
@@ -304,6 +303,7 @@ smv=IMP.core.SerialMover(mvs)
 # Monte Carlo with Wte
 #mc=IMP.membrane.MonteCarloWithWte(m,EMIN_,EMAX_,SIGMA_,GAMMA_,W0_)
 mc=IMP.core.MonteCarlo(m)
+mc.set_scoring_function(sf)
 mc.set_return_best(False)
 mc.set_kt(tempval)
 mc.add_mover(smv)
@@ -348,7 +348,7 @@ for istep in range(0,NITER_):
             #peri_drms_copies.append(get_drms(peri_align_copies[i],peri_dist_dict_copies[i]))
 
         # get total score, bias potential and cross-link score for RMF
-        myscore=m.evaluate(False)
+        myscore=sf.evaluate(False)
         #mybias=mc.get_bias(myscore)
         mycross=global_rset['Cross-link'].evaluate(False)
 
@@ -428,7 +428,7 @@ for istep in range(0,NITER_):
 
 
     # time for an exchange
-    score=m.evaluate(False)
+    score=sf.evaluate(False)
     # get my index
     myindex=rem.get_my_index()
     # get my parameters
