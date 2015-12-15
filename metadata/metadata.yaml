@@ -1,6 +1,7 @@
 title: PhoQ
 tags: [cysteine crosslinks, multi-state]
 pmid: 25087511
+prereqs: [python/biopython]
 test:
     runtime: 24h
     build: release
