@@ -266,7 +266,7 @@ for i in range(0,NCOPIES_):
 #    global_rset['Kink::'+str(i)]=get_kink_restraint(m, hpairs, 100.0*KAPPA_)
 
 # make scoring function
-sf = IMP.core.RestraintsScoringFunction(global_rset.values())
+sf = IMP.core.RestraintsScoringFunction(list(global_rset.values()))
 
 # Set coordinates as not optimized
 for i in range(0,NCOPIES_):
