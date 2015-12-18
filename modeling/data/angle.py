@@ -22,6 +22,8 @@ Scientific.Geometry.Vector objects behave differently on Win and Linux,
 and they are therefore not supported (but may work anyway).
 """
 
+from __future__ import print_function
+
 __author__ = "Kristian Rother"
 __copyright__ = "Copyright 2007-2009 2008, The Cogent Project"
 __contributors__ = ["Kristian Rother", "Sandra Smit"]
@@ -183,7 +185,7 @@ for a in open("file.list"):
 
   
   nn=nn+1
-  print nn,file  
+  print(nn,file)
   if nn%1000==0: print_output(dihe_histo)
   
   logic=False
