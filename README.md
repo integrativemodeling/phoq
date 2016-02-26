@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.46600.svg)](http://dx.doi.org/10.5281/zenodo.46600)
+
 This directory contains the input data, protocols and output model for the
 modeling of the PhoQ homodimer, using cysteine crosslinking and
 multi-state Bayesian modeling in [IMP](http://integrativemodeling.org).
