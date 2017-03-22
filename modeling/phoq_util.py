@@ -70,16 +70,16 @@ def get_excluded_volume(m, prot,kappa,excluded_residues=[]):
         IMP.core.XYZR(atom).set_radius(radius)
         atoms_to_use.append(atom)
     lsc=IMP.container.ListSingletonContainer(m)
-    lsc.add_particles(atoms_to_use)
+    lsc.add(atoms_to_use)
     evr=IMP.core.ExcludedVolumeRestraint(lsc,kappa)
     evr.set_name('Excluded_Volume')
     rset.add_restraint(evr)
     return rset
 
-def get_distance_restraint(p0, p1, d0, kappa):
+def get_distance_restraint(m, p0, p1, d0, kappa):
     h=IMP.core.Harmonic(d0,kappa)
     dps=IMP.core.DistancePairScore(h)
-    pr=IMP.core.PairRestraint(dps,IMP.ParticlePair(p0,p1))
+    pr=IMP.core.PairRestraint(m, dps,IMP.ParticlePair(p0,p1))
     return pr
 
 def read_potential_dihedral(filename,string,mix=False):
@@ -189,7 +189,7 @@ def get_CA_force_field(m, chain, resrange, dihe_dict, ang_dict, do_mix):
             ps.append(s.get_selected_particles()[0])
         pairslist.append(IMP.ParticlePair(ps[0],ps[1]))
         pairslist.append(IMP.ParticlePair(ps[1],ps[0]))
-        br=get_distance_restraint(ps[0],ps[1],3.78,416.0)
+        br=get_distance_restraint(m, ps[0],ps[1],3.78,416.0)
         br.set_name('Bond_restraint')
         rslist.append(br)
     # add dihedrals
@@ -332,7 +332,7 @@ def get_kink_restraint(m, rbpairs, kappa):
     for rbs in rbpairs:
         h=IMP.core.HarmonicWell([10.0/180.0*math.pi,40.0/180.0*math.pi],kappa)
         kps=IMP.core.RigidBodyAnglePairScore(h)
-        pr=IMP.core.PairRestraint(kps,IMP.ParticlePair(rbs[0],rbs[1]))
+        pr=IMP.core.PairRestraint(m, kps,IMP.ParticlePair(rbs[0],rbs[1]))
         rset.add_restraint(pr)
     return rset
 
@@ -535,7 +535,7 @@ def get_layer_restraint(m, protein,resid,zrange,kappa):
     rset=IMP.RestraintSet(m, 'Layer_restraint')
     lsc=IMP.container.ListSingletonContainer(m)
     s=IMP.atom.Selection(protein, residue_index=resid, atom_type=IMP.atom.AT_CA)
-    lsc.add_particles(s.get_selected_particles())
+    lsc.add(s.get_selected_particle_indexes())
     hw=IMP.core.HarmonicWell(zrange,kappa)
     asc=IMP.core.AttributeSingletonScore(hw,IMP.FloatKey("z"))
     sr=IMP.container.SingletonsRestraint(asc, lsc)
