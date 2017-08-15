@@ -7,6 +7,7 @@ import IMP.atom
 import IMP.container
 import IMP.core
 import IMP.rmf
+import IMP.isd
 import RMF
 import math
 sys.path.append('..')
