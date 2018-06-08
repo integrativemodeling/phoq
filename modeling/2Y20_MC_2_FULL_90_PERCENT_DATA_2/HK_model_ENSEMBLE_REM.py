@@ -277,14 +277,14 @@ for i in range(0,NCOPIES_):
 # Movers
 mvs=[]
 # Rigid Body Movers
-mvs+=get_rb_movers(rblist,MAXTRANS_,MAXROT_)
+mvs+=get_rb_movers(m,rblist,MAXTRANS_,MAXROT_)
 # Particle Movers
 ps=[]
 for i in range(0,NCOPIES_):
     for p in IMP.atom.get_leaves(PHOQ[i]):
         if(IMP.core.RigidMember.get_is_setup(p)==False):
             ps.append(p)
-mvs+=get_ball_movers(ps,MAXTRANS_)
+mvs+=get_ball_movers(m,ps,MAXTRANS_)
 
 # Movers for omegas
 for i in range(0,NCOPIES_):

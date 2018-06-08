@@ -342,18 +342,18 @@ def get_prior(m, sigmas):
         rslist.append(IMP.isd.JeffreysRestraint(m, sigmas[sigma]))
     return rslist
 
-def get_rb_movers(rblist,rmax,tmax):
+def get_rb_movers(m,rblist,rmax,tmax):
     mvs=[]
     for rb in rblist:
         rblist[rb].set_coordinates_are_optimized(True)
-        mv= IMP.core.RigidBodyMover(rblist[rb], rmax, tmax)
+        mv= IMP.core.RigidBodyMover(m, rblist[rb], rmax, tmax)
         mvs.append(mv)
     return mvs
 
-def get_ball_movers(ps,tmax):
+def get_ball_movers(m,ps,tmax):
     mvs=[]
     for p in ps:
-        mv= IMP.core.BallMover([p], tmax)
+        mv= IMP.core.BallMover(m, [p], tmax)
         mvs.append(mv)
     return mvs
 
