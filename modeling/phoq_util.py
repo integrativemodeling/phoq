@@ -26,13 +26,13 @@ def read_alignments(filename,model,temp):
         riga=(line.strip()).split()
 
         try:
-            s1=IMP.atom.Selection(model, chains=riga[1], residue_index=int(riga[2]), residue_type=IMP.atom.get_residue_type(riga[0]), atom_type=IMP.atom.AT_CA)
+            s1=IMP.atom.Selection(model, chain_id=riga[1], residue_index=int(riga[2]), residue_type=IMP.atom.get_residue_type(riga[0]), atom_type=IMP.atom.AT_CA)
             p1=s1.get_selected_particles()[0]
         except:
             print("residue %d of chain %s not found in model" % (int(riga[2]),riga[1]))
             continue
         try:
-            s2=IMP.atom.Selection(temp, chains=riga[4], residue_index=int(riga[5]), residue_type=IMP.atom.get_residue_type(riga[3]), atom_type=IMP.atom.AT_CA)
+            s2=IMP.atom.Selection(temp, chain_id=riga[4], residue_index=int(riga[5]), residue_type=IMP.atom.get_residue_type(riga[3]), atom_type=IMP.atom.AT_CA)
             p2=s2.get_selected_particles()[0]
         except:
             print("residue %d of chain %s not found in template" % (int(riga[5]), riga[4]))
@@ -492,10 +492,10 @@ def get_crosslink_restraint(m, protein_copies, filename):
                                                crossdata, ccldata)
 
         for i,prot in enumerate(protein_copies):
-            s1=IMP.atom.Selection(prot, chains=chain1, residue_index=resid1, atom_type=IMP.atom.AT_CA)
+            s1=IMP.atom.Selection(prot, chain_id=chain1, residue_index=resid1, atom_type=IMP.atom.AT_CA)
             p1=s1.get_selected_particles()[0]
 
-            s2=IMP.atom.Selection(prot, chains=chain2, residue_index=resid2, atom_type=IMP.atom.AT_CA)
+            s2=IMP.atom.Selection(prot, chain_id=chain2, residue_index=resid2, atom_type=IMP.atom.AT_CA)
             p2=s2.get_selected_particles()[0]
 
             ccl.add_contribution(p1,p2)
